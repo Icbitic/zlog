@@ -1,24 +1,39 @@
-//
-//  ContentView.swift
-//  zlog
-//
-//  Created by Kalen Suen on 2025/4/26.
-//
-
 import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        TabView {
+            JournalView()
+                .tabItem {
+                    Image(systemName: "highlighter")
+                    Text("Journal")
+                }
+
+            TagsView()
+                .tabItem {
+                    Image(systemName: "tag.fill")
+                    Text("Tags")
+                }
+
+            StatsView()
+                .tabItem {
+                    Image(systemName: "chart.bar.fill")
+                    Text("Stats")
+                }
+            
+            ReadingView()
+                .tabItem {
+                    Image(systemName: "books.vertical.fill")
+                    Text("Reading")
+                }
         }
-        .padding()
     }
 }
 
-#Preview {
-    ContentView()
+struct ContentViewPreview: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+            .environmentObject(SleepStore.sampleSleepStore)
+            .environmentObject(TagStore.sampleTagStore)
+    }
 }
