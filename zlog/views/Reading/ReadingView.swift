@@ -3,14 +3,14 @@ import SwiftUI
 struct ReadingView: View {
     @EnvironmentObject var store: SleepStore
     @Environment(\.colorScheme) var colorScheme
-
+    
     // State
     @State private var currentDream: Dream? = nil
     @State private var useRemote: Bool = false
     @State private var serverDreams: [Dream] = []
     @State private var isLoadingRemote: Bool = false
     @State private var errorMessage: String? = nil
-
+    
     // Dynamic Colors
     private var backgroundColor: Color { Color(UIColor.systemGroupedBackground) }
     private var cardBackground: Color {
@@ -19,16 +19,16 @@ struct ReadingView: View {
     private var shadowColor: Color {
         colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05)
     }
-
+    
     var body: some View {
         NavigationStack {
             ZStack {
                 backgroundColor
                     .ignoresSafeArea()
-
+                
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
-
+                        
                         // Source Toggle
                         Picker("Source", selection: $useRemote) {
                             Label("Local", systemImage: "folder").tag(false)
@@ -36,7 +36,7 @@ struct ReadingView: View {
                         }
                         .pickerStyle(SegmentedPickerStyle())
                         .padding(.horizontal)
-
+                        
                         // Error or Loading
                         if let msg = errorMessage {
                             Text(msg)
@@ -46,7 +46,7 @@ struct ReadingView: View {
                             ProgressView("Loading...")
                                 .padding(.horizontal)
                         }
-
+                        
                         // Dream Card
                         if let dream = currentDream {
                             VStack(alignment: .leading, spacing: 12) {
@@ -54,10 +54,10 @@ struct ReadingView: View {
                                     .font(.title2)
                                     .fontWeight(.semibold)
                                     .foregroundColor(.primary)
-
+                                
                                 Text(dream.description)
                                     .foregroundColor(.secondary)
-
+                                
                                 if !dream.tags.isEmpty {
                                     HStack(spacing: 8) {
                                         ForEach(dream.tags, id: \.id) { tag in
@@ -70,24 +70,23 @@ struct ReadingView: View {
                                         }
                                     }
                                 }
-
-                                if !useRemote{
-                                    // Share Button
-                                    Button(action: shareDream) {
-                                        HStack {
-                                            Image(systemName: "square.and.arrow.up")
-                                            Text("Share Dream")
-                                                .font(.headline)
-                                            Spacer()
-                                        }
-                                        .padding()
-                                        .background(cardBackground)
-                                        .cornerRadius(12)
-                                        .shadow(color: shadowColor, radius: 4, x: 0, y: 2)
-                                        .padding(.top)
+                                
+                                // Share Button
+                                Button(action: shareDream) {
+                                    HStack {
+                                        Image(systemName: "square.and.arrow.up")
+                                        Text("Share Dream")
+                                            .font(.headline)
+                                        Spacer()
                                     }
-                                    .disabled(useRemote || dream.isUploaded)
+                                    .padding()
+                                    .background(cardBackground)
+                                    .cornerRadius(12)
+                                    .shadow(color: shadowColor, radius: 4, x: 0, y: 2)
+                                    .padding(.top)
                                 }
+                                .disabled(useRemote || dream.isUploaded)
+                                
                             }
                             .padding()
                             .background(cardBackground)
@@ -101,7 +100,7 @@ struct ReadingView: View {
                                 .padding()
                                 .frame(maxWidth: .infinity)
                         }
-
+                        
                         // Randomize Button
                         Button(action: pickRandom) {
                             HStack {
@@ -136,9 +135,9 @@ struct ReadingView: View {
             }
         }
     }
-
+    
     // MARK: - Actions
-
+    
     private func pickRandom() {
         if useRemote {
             if serverDreams.isEmpty {
@@ -150,12 +149,12 @@ struct ReadingView: View {
             currentDream = store.sleeps.flatMap { $0.dreams }.randomElement()
         }
     }
-
+    
     private func fetchRemoteDreams() {
         guard let url = URL(string: "http://localhost:8080/api/dreams") else { return }
         isLoadingRemote = true
         errorMessage = nil
-
+        
         URLSession.shared.dataTask(with: url) { data, response, error in
             DispatchQueue.main.async {
                 isLoadingRemote = false
@@ -171,18 +170,18 @@ struct ReadingView: View {
             }
         }.resume()
     }
-
+    
     private func shareDream() {
         guard let dream = currentDream,
               let url = URL(string: "http://localhost:8080/api/dreams") else { return }
-
+        
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
+        
         guard let body = try? JSONEncoder().encode(dream) else { return }
         request.httpBody = body
-
+        
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 if error == nil {
